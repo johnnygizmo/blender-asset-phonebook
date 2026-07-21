@@ -7,7 +7,9 @@ This is a collection of asset libraries you can add to Blender. To submit a addi
 
 - Your Name
 - Email Address
-- Website / Youtube Channel
+- Contact Website (optional)
+- Youtube Channel (optional)
 - Asset URL
+- Library Website (optional promotional website for library, required if Freemium or Premium)
 - Description of the general types of assets in your repo
-- Whether your library is 100% free or if there are paid tiers as well.
+- Whether your library is 100% free, freemium, or premium only  (if freemium or premium, please include a library website)
