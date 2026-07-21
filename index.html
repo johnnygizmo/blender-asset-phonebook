@@ -1,8 +1,846 @@
-<html>
-  <head>
-    <title>Blender Asset Phonebook</title>
-  </head>
-  <body>
-    
-  </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blender Asset Phonebook</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #1e1e1e;
+      --surface:  #2a2a2a;
+      --surface2: #333333;
+      --border:   #444444;
+      --orange:   #e87d0d;
+      --orange-dk:#c46b0a;
+      --text:     #e0e0e0;
+      --muted:    #999999;
+      --green:    #4caf50;
+      --gold:     #f0c040;
+      --blue:     #5b9bd5;
+      --radius:   6px;
+      --panel-w:  380px;
+      --header-h: 60px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      height: var(--header-h);
+      background: var(--surface);
+      border-bottom: 2px solid var(--orange);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--orange);
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+    }
+
+    .logo span { color: var(--text); font-weight: 400; }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-left: auto;
+      flex-wrap: wrap;
+    }
+
+    #search {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 6px 12px;
+      font-size: 0.875rem;
+      width: 200px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #search:focus { border-color: var(--orange); }
+    #search::placeholder { color: var(--muted); }
+
+    .filter-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .filter-btn:hover { border-color: var(--orange); color: var(--text); }
+    .filter-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; font-weight: 600; }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Alpha nav ── */
+    .alpha-nav {
+      width: 36px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0;
+      gap: 2px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .alpha-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .alpha-nav a:hover { color: var(--orange); background: var(--surface2); }
+    .alpha-nav a.has-entries { color: var(--text); }
+    .alpha-nav a.active-letter { color: var(--orange); }
+
+    /* ── Main grid ── */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      transition: margin-right 0.3s ease;
+    }
+
+    main.panel-open { margin-right: var(--panel-w); }
+
+    .alpha-section { margin-bottom: 32px; }
+
+    .alpha-heading {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--orange);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+      scroll-margin-top: 80px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card:hover {
+      border-color: var(--orange);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(232,125,13,0.15);
+    }
+
+    .card.selected { border-color: var(--orange); background: var(--surface2); }
+
+    .card-library {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .card-name {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 3px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .badge-FREE       { background: rgba(76,175,80,0.2);  color: var(--green); border: 1px solid rgba(76,175,80,0.4); }
+    .badge-PREMIUM    { background: rgba(91,155,213,0.2); color: var(--blue);  border: 1px solid rgba(91,155,213,0.4); }
+    .badge-FREEMIUM { background: rgba(240,192,64,0.2); color: var(--gold);  border: 1px solid rgba(240,192,64,0.4); }
+
+    .tag {
+      font-size: 0.68rem;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 60px 20px;
+      font-size: 1rem;
+    }
+
+    /* ── Slideout Panel ── */
+    .panel {
+      position: fixed;
+      top: var(--header-h);
+      right: 0;
+      width: var(--panel-w);
+      height: calc(100vh - var(--header-h));
+      background: var(--surface);
+      border-left: 2px solid var(--orange);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel.open { transform: translateX(0); }
+
+    .panel-header {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .panel-title-block { flex: 1; }
+
+    .panel-library {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .panel-creator {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .panel-creator a {
+      color: var(--orange);
+      text-decoration: none;
+    }
+
+    .panel-creator a:hover { text-decoration: underline; }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .close-btn:hover { color: var(--text); background: var(--surface2); }
+
+    .panel-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+
+    .panel-section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .panel-description {
+      font-size: 0.875rem;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .panel-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .panel-tag {
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .copy-btn {
+      display: block;
+      width: 100%;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      text-align: center;
+      padding: 10px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .copy-btn:hover { background: var(--orange-dk); }
+    .copy-btn.copied { background: var(--green); }
+
+    .visit-btn {
+      display: block;
+      background: var(--surface2);
+      color: var(--text);
+      text-decoration: none;
+      text-align: center;
+      padding: 10px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .visit-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+    .yt-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #ff0000;
+      color: #fff;
+      text-decoration: none;
+      padding: 10px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+
+    .yt-btn:hover { background: #cc0000; }
+
+    .contribute-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .contribute-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+    /* ── Tag filter bar ── */
+    .tag-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 16px 8px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      flex-shrink: 0;
+      scrollbar-width: thin;
+    }
+
+    .tag-bar-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      white-space: nowrap;
+      padding: 0 6px;
+    }
+
+    .tag-filter {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--muted);
+      padding: 3px 11px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .tag-filter:hover { border-color: var(--orange); color: var(--text); }
+    .tag-filter.active { background: var(--orange); border-color: var(--orange); color: #fff; font-weight: 600; }
+
+    .panel-tag {
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .panel-tag:hover { border-color: var(--orange); color: var(--orange); }
+
+    /* ── Scrollbar styling ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Blender <span>Asset Phonebook</span></div>
+  <div class="controls">
+    <a class="contribute-btn" href="https://github.com/johnnygizmo/blender-asset-phonebook" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.13 3 .4 2.28-1.55 3.29-1.23 3.29-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.69.83.57C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      How to Contribute
+    </a>
+    <input id="search" type="search" placeholder="Search libraries or creators…" autocomplete="off">
+    <button class="filter-btn active" data-type="ALL">All</button>
+    <div id="type-filters"></div>
+  </div>
+</header>
+
+<div id="tag-bar" class="tag-bar"><span class="tag-bar-label">Tags</span></div>
+
+<div class="layout">
+  <nav class="alpha-nav" id="alpha-nav" aria-label="Alphabetical navigation"></nav>
+
+  <main id="main"></main>
+</div>
+
+<!-- Slideout panel -->
+<aside class="panel" id="panel" role="complementary" aria-label="Library details">
+  <div class="panel-header">
+    <div class="panel-title-block">
+      <div class="panel-library" id="panel-library"></div>
+      <div class="panel-creator" id="panel-creator"></div>
+    </div>
+    <button class="close-btn" id="panel-close" aria-label="Close panel">&times;</button>
+  </div>
+  <div class="panel-body">
+    <div id="panel-type-row"></div>
+    <div>
+      <div class="panel-section-label">Description</div>
+      <div class="panel-description" id="panel-description"></div>
+    </div>
+    <div id="panel-tags-section">
+      <div class="panel-section-label">Tags</div>
+      <div class="panel-tags" id="panel-tags"></div>
+    </div>
+    <div id="panel-yt-section">
+      <div class="panel-section-label">YouTube</div>
+      <a class="yt-btn" id="panel-yt-link" href="#" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31.2 31.2 0 0 0 0 12a31.2 31.2 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.2 31.2 0 0 0 24 12a31.2 31.2 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
+        Watch on YouTube
+      </a>
+    </div>
+    <div id="panel-website-section">
+      <div class="panel-section-label">Library Website</div>
+      <a class="visit-btn" id="panel-website-link" href="#" target="_blank" rel="noopener noreferrer">Visit Library Website →</a>
+    </div>
+    <div id="panel-url-section">
+      <div class="panel-section-label">Library URL</div>
+      <code id="panel-url-text" style="display:block;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:0.78rem;color:var(--muted);word-break:break-all;margin-bottom:8px;"></code>
+      <button class="copy-btn" id="panel-url-copy">Copy Library URL</button>
+    </div>
+  </div>
+</aside>
+
+<script>
+  const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+  let allListings = [];
+  let allTypes = [];
+  let activeType = 'ALL';
+  let activeTag = null;
+  let selectedIndex = null;
+
+  const TYPE_META = {
+    'FREE':    { icon: '🔓', cls: 'FREE' },
+    'PREMIUM': { icon: '👑', cls: 'PREMIUM' },
+    'FREEMIUM':{ icon: '⭐', cls: 'FREEMIUM' }
+  };
+
+  function typeMeta(type) {
+    return TYPE_META[type] || { icon: '◉', cls: type.replace(/\s+/g, '').replace(/\//g, '') };
+  }
+
+  function badgeClass(type) {
+    return 'badge-' + typeMeta(type).cls;
+  }
+
+  async function loadData() {
+    const [pbRes, tyRes] = await Promise.all([
+      fetch('phonebook.json'),
+      fetch('types.json')
+    ]);
+    const pb = await pbRes.json();
+    allListings = pb.listings;
+    allTypes = await tyRes.json();
+    buildTypeFilters();
+    buildTagFilters();
+    buildAlphaNav();
+    render();
+  }
+
+  function buildTypeFilters() {
+    const container = document.getElementById('type-filters');
+    container.innerHTML = '';
+    allTypes.forEach(type => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.type = type;
+      const { icon } = typeMeta(type);
+      btn.textContent = icon + '  ' + type;
+      btn.addEventListener('click', () => setType(type));
+      container.appendChild(btn);
+    });
+  }
+
+  function buildTagFilters() {
+    const allTags = [...new Set(
+      allListings.flatMap(e => e.tags || [])
+    )].sort((a, b) => a.localeCompare(b));
+
+    const bar = document.getElementById('tag-bar');
+    bar.innerHTML = '<span class="tag-bar-label">Tags</span>';
+    allTags.forEach(tag => {
+      const btn = document.createElement('button');
+      btn.className = 'tag-filter' + (activeTag === tag ? ' active' : '');
+      btn.textContent = tag;
+      btn.addEventListener('click', () => setTag(tag));
+      bar.appendChild(btn);
+    });
+  }
+
+  function setTag(tag) {
+    activeTag = activeTag === tag ? null : tag;
+    document.querySelectorAll('.tag-filter').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent === activeTag);
+    });
+    closePanel();
+    render();
+  }
+
+  function buildAlphaNav() {
+    const nav = document.getElementById('alpha-nav');
+    nav.innerHTML = '';
+    ALPHABET.forEach(letter => {
+      const a = document.createElement('a');
+      a.href = '#section-' + letter;
+      a.textContent = letter;
+      a.dataset.letter = letter;
+      a.title = letter;
+      nav.appendChild(a);
+    });
+    updateAlphaNav([]);
+  }
+
+  function updateAlphaNav(presentLetters) {
+    document.querySelectorAll('.alpha-nav a').forEach(a => {
+      if (presentLetters.includes(a.dataset.letter)) {
+        a.classList.add('has-entries');
+      } else {
+        a.classList.remove('has-entries');
+      }
+    });
+  }
+
+  function setType(type) {
+    activeType = type;
+    activeTag = null;
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.type === type);
+    });
+    document.querySelectorAll('.tag-filter').forEach(btn => btn.classList.remove('active'));
+    closePanel();
+    render();
+  }
+
+  document.querySelector('.filter-btn[data-type="ALL"]').addEventListener('click', () => setType('ALL'));
+
+  function getFiltered() {
+    const query = document.getElementById('search').value.trim().toLowerCase();
+    return allListings.filter(entry => {
+      const typeMatch = activeType === 'ALL' || entry.type === activeType;
+      const tagMatch = !activeTag || (entry.tags || []).includes(activeTag);
+      const textMatch = !query ||
+        entry.library_name.toLowerCase().includes(query) ||
+        entry.name.toLowerCase().includes(query) ||
+        (entry.description || '').toLowerCase().includes(query) ||
+        (entry.tags || []).some(t => t.toLowerCase().includes(query));
+      return typeMatch && tagMatch && textMatch;
+    });
+  }
+
+  function render() {
+    const filtered = getFiltered();
+    const main = document.getElementById('main');
+    main.innerHTML = '';
+
+    // Group alphabetically by library_name
+    const groups = {};
+    filtered.forEach((entry, idx) => {
+      const letter = entry.library_name[0].toUpperCase();
+      const key = /[A-Z]/.test(letter) ? letter : '#';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push({ entry, idx });
+    });
+
+    const sortedKeys = Object.keys(groups).sort((a, b) => {
+      if (a === '#') return 1;
+      if (b === '#') return -1;
+      return a.localeCompare(b);
+    });
+
+    updateAlphaNav(sortedKeys.filter(k => k !== '#'));
+
+    if (sortedKeys.length === 0) {
+      main.innerHTML = '<div class="empty">No libraries found. Try a different search or filter.</div>';
+      return;
+    }
+
+    sortedKeys.forEach(letter => {
+      const section = document.createElement('div');
+      section.className = 'alpha-section';
+      section.id = 'section-' + letter;
+
+      const heading = document.createElement('div');
+      heading.className = 'alpha-heading';
+      heading.textContent = letter;
+      section.appendChild(heading);
+
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+
+      const sorted = groups[letter].sort((a, b) =>
+        a.entry.library_name.localeCompare(b.entry.library_name)
+      );
+
+      sorted.forEach(({ entry, idx }) => {
+        const card = buildCard(entry, idx);
+        grid.appendChild(card);
+      });
+
+      section.appendChild(grid);
+      main.appendChild(section);
+    });
+
+    // Re-apply selected highlight if panel is open
+    if (selectedIndex !== null) {
+      const card = document.querySelector(`.card[data-idx="${selectedIndex}"]`);
+      if (card) card.classList.add('selected');
+    }
+  }
+
+  function buildCard(entry, idx) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.idx = idx;
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', entry.library_name);
+
+    card.innerHTML = `
+      <div class="card-library">${escHtml(entry.library_name)}</div>
+      <div class="card-name">${escHtml(entry.name)}</div>
+      <div class="card-footer">
+        <span class="badge ${badgeClass(entry.type)}" title="${escHtml(entry.type)}">${typeMeta(entry.type).icon} ${escHtml(entry.type)}</span>
+        ${(entry.tags || []).slice(0, 2).map(t => `<span class="tag">${escHtml(t)}</span>`).join('')}
+      </div>
+    `;
+
+    card.addEventListener('click', () => openPanel(entry, idx));
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openPanel(entry, idx); });
+    return card;
+  }
+
+  function openPanel(entry, idx) {
+    selectedIndex = idx;
+
+    // Highlight selected card
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+    const card = document.querySelector(`.card[data-idx="${idx}"]`);
+    if (card) card.classList.add('selected');
+
+    // Populate panel
+    document.getElementById('panel-library').textContent = entry.library_name;
+
+    const creatorEl = document.getElementById('panel-creator');
+    if (entry.website) {
+      creatorEl.innerHTML = `by <a href="${escAttr(entry.website)}" target="_blank" rel="noopener noreferrer">${escHtml(entry.name)}</a>`;
+    } else {
+      creatorEl.textContent = 'by ' + entry.name;
+    }
+
+    document.getElementById('panel-type-row').innerHTML =
+      `<span class="badge ${badgeClass(entry.type)}" style="font-size:0.8rem;padding:4px 10px">${typeMeta(entry.type).icon} ${escHtml(entry.type)}</span>`;
+
+    document.getElementById('panel-description').textContent = entry.description || 'No description provided.';
+
+    const tagsEl = document.getElementById('panel-tags');
+    if (entry.tags && entry.tags.length) {
+      tagsEl.innerHTML = '';
+      entry.tags.forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'panel-tag';
+        span.textContent = t;
+        span.title = 'Filter by ' + t;
+        span.addEventListener('click', () => setTag(t));
+        tagsEl.appendChild(span);
+      });
+      document.getElementById('panel-tags-section').style.display = '';
+    } else {
+      document.getElementById('panel-tags-section').style.display = 'none';
+    }
+
+    const ytLink = document.getElementById('panel-yt-link');
+    if (entry.youtube) {
+      ytLink.href = escAttr(entry.youtube);
+      document.getElementById('panel-yt-section').style.display = '';
+    } else {
+      document.getElementById('panel-yt-section').style.display = 'none';
+    }
+
+    const websiteLink = document.getElementById('panel-website-link');
+    if (entry.library_website) {
+      websiteLink.href = escAttr(entry.library_website);
+      document.getElementById('panel-website-section').style.display = '';
+    } else {
+      document.getElementById('panel-website-section').style.display = 'none';
+    }
+
+    const copyBtn = document.getElementById('panel-url-copy');
+    if (entry.library_url) {
+      document.getElementById('panel-url-text').textContent = entry.library_url;
+      copyBtn.dataset.url = entry.library_url;
+      copyBtn.textContent = 'Copy Library URL';
+      copyBtn.classList.remove('copied');
+      document.getElementById('panel-url-section').style.display = '';
+    } else {
+      document.getElementById('panel-url-section').style.display = 'none';
+    }
+
+    document.getElementById('panel').classList.add('open');
+    document.getElementById('main').classList.add('panel-open');
+  }
+
+  function closePanel() {
+    selectedIndex = null;
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('panel').classList.remove('open');
+    document.getElementById('main').classList.remove('panel-open');
+  }
+
+  document.getElementById('panel-close').addEventListener('click', closePanel);
+
+  document.getElementById('panel-url-copy').addEventListener('click', function () {
+    const url = this.dataset.url;
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(() => {
+      this.textContent = 'Copied!';
+      this.classList.add('copied');
+      setTimeout(() => {
+        this.textContent = 'Copy Library URL';
+        this.classList.remove('copied');
+      }, 2000);
+    });
+  });
+
+  document.getElementById('search').addEventListener('input', () => {
+    activeTag = null;
+    document.querySelectorAll('.tag-filter').forEach(btn => btn.classList.remove('active'));
+    closePanel();
+    render();
+  });
+
+  // Close panel on Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closePanel();
+  });
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function escAttr(str) {
+    // Only allow http/https URLs
+    const s = String(str).trim();
+    if (!/^https?:\/\//i.test(s)) return '#';
+    return s.replace(/"/g, '&quot;');
+  }
+
+  loadData();
+</script>
+</body>
 </html>
+

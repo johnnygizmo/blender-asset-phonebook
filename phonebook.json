@@ -1,0 +1,46 @@
+{
+    "listings":[
+        {
+            "name":"Johnny Matthews",
+            "website":"http://youtube.com/@johnnymatthews",
+            "youtube":"https://www.youtube.com/@johnnymatthews",
+            "library_name":"Johnnygizmo Assets",
+            "library_website":"https://johnnygizmo.github.io/assets",
+            "library_url":"https://johnnygizmo.github.io/assets",
+            "description":"Johnny's Models and Materials",
+            "type":"FREE",
+            "tags":["Models","Materials"]
+        },
+        {
+            "name":"Johnny Matthews",
+            "website":"http://youtube.com/@johnnymatthews",
+            "youtube":"https://www.youtube.com/@johnnymatthews",
+            "library_name":"Johnnygizmo Node Assets",
+            "library_website":"https://johnnygizmo.github.io/node_repo",
+            "library_url":"https://johnnygizmo.github.io/node_repo",
+            "description":"Johnny's Nodegroups",
+            "type":"FREE",
+            "tags":["Geometry Nodes","Shader Nodes"]
+        }, {
+            "name":"Ambient CG",
+            "website":"https://ambientcg.com",
+            "library_name":"Ambient CG",
+            "library_url":"https://ambientcg.com/api/blender/",
+            "library_website":"https://www.patreon.com/ambientCG/posts/blender-5-2-lts-163801646",
+            "description":"PBR materials and HDRIs",
+            "type":"FREEMIUM",
+            "tags":["Models","Materials","HDRI"]
+        },{
+            
+            "name":"CG Matter",
+            "website":"https://www.cgmatter.com",
+            "youtube":"https://www.youtube.com/@CGMatter",
+            "library_name":"CG Matter Nodes",
+            "library_url":"https://cgmatter.github.io/website/nodes/",
+            "library_website":"https://cgmatter.github.io/website/markdown/main/nodes.html",
+            "description":"CG Matter's Blender Nodes",
+            "type":"FREE",
+            "tags":["Geometry Nodes","Shader Nodes"]
+        }
+    ]
+}
