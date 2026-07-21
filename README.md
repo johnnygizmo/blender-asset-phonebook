@@ -3,7 +3,7 @@ A listing of Online Asset Libraries for Blender
 
 [http://johnnygizmo.github.io/blender-asset-phonebook]
 
-This is a collection of asset libraries you can add to Blender. To submit a addition, create a PR, or send me an email address with:
+This is a collection of asset libraries you can add to Blender. To submit a addition, create a PR, or send an email to johnny.matthews+phonebook@gmail.com with:
 
 - Your Name
 - Email Address
