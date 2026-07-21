@@ -6,7 +6,6 @@ http://johnnygizmo.github.io/blender-asset-phonebook
 This is a collection of asset libraries you can add to Blender. To submit a addition send an email to johnny.matthews+phonebook@gmail.com with:
 
 - Your Name
-- Email Address
 - Contact Website (optional)
 - Youtube Channel (optional)
 - Asset URL
