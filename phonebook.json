@@ -41,6 +41,16 @@
             "description":"CG Matter's Blender Nodes",
             "type":"FREE",
             "tags":["Geometry Nodes","Shader Nodes"]
+        },{
+            
+            "name":"Blender Foundation",
+            "website":"https://www.blender.org",
+            "youtube":"https://www.youtube.com/@blenderofficial",
+            "library_name":"Blender Essentials",
+            "library_url":"-",
+            "description":"Blender Foundation's Essential Assets",
+            "type":"FREE",
+            "tags":["Geometry Nodes","Shader Nodes","Materials","HDRI","Models"]
         }
     ]
 }

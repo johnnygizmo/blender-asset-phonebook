@@ -505,6 +505,7 @@
     </div>
     <div id="panel-url-section">
       <div class="panel-section-label">Library URL</div>
+      <div id="panel-builtin" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;font-size:0.85rem;color:var(--green);">&#10003; Built into Blender 5.2+</div>
       <code id="panel-url-text" style="display:block;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:0.78rem;color:var(--muted);word-break:break-all;margin-bottom:8px;"></code>
       <button class="copy-btn" id="panel-url-copy">Copy Library URL</button>
     </div>
@@ -776,11 +777,20 @@
     }
 
     const copyBtn = document.getElementById('panel-url-copy');
-    if (entry.library_url) {
+    const builtinEl = document.getElementById('panel-builtin');
+    if (entry.library_url && entry.library_url !== '-') {
       document.getElementById('panel-url-text').textContent = entry.library_url;
       copyBtn.dataset.url = entry.library_url;
       copyBtn.textContent = 'Copy Library URL';
       copyBtn.classList.remove('copied');
+      builtinEl.style.display = 'none';
+      document.getElementById('panel-url-text').style.display = 'block';
+      copyBtn.style.display = 'block';
+      document.getElementById('panel-url-section').style.display = '';
+    } else if (entry.library_url === '-') {
+      builtinEl.style.display = 'block';
+      document.getElementById('panel-url-text').style.display = 'none';
+      copyBtn.style.display = 'none';
       document.getElementById('panel-url-section').style.display = '';
     } else {
       document.getElementById('panel-url-section').style.display = 'none';
